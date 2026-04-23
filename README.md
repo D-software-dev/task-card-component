@@ -1,6 +1,6 @@
-# Task Card Components
+# Task Card Component
 
-A responsive set of task (todo) cards, where individuals can check todo's and mark them as done.
+A responsive task (todo) card, where individuals can check todo's and mark them as done.
 
 ## AIM
 
