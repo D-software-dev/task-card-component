@@ -276,11 +276,12 @@
         <div class="card-content">
           <div class="title">
             <span class="sr-only">Priority: Medium</span>
-            <div class="title-content medium-priority" aria-live="polite">
+            <div class="title-content medium-priority">
               <h1 data-testid="test-todo-title">
                 Design System Audit & Brand Alignment
               </h1>
             </div>
+            <div id="live-announcer" class="sr-only" role="status"></div>
             <button
               class="more-less toggle-btn"
               aria-expanded="false"
@@ -387,6 +388,7 @@
 
       <article
         data-testid="test-todo-card"
+        data-priority="low"
         class="card priority-low"
         data-due="2026-05-01T17:00:00"
       >
@@ -399,7 +401,7 @@
               aria-label="Select task"
               data-testid="test-todo-complete-toggle"
             />
-            <span data-testid="test-todo-priority" class="badge status-pending"
+            <span data-testid="test-todo-status" class="badge status-pending"
               >Pending</span
             >
           </div>
@@ -407,6 +409,7 @@
           <div class="action-icons">
             <button
               data-testid="test-todo-edit-button"
+              id="open-modal"
               class="edit"
               aria-label="Edit task"
             >
@@ -450,11 +453,13 @@
         <div class="card-content">
           <div class="title">
             <span class="sr-only">Priority: Low</span>
-            <div class="title-content low-priority" aria-live="polite">
+            <div class="title-content low-priority">
+              <span class="icon"></span>
               <h1 data-testid="test-todo-title">
                 Refactor Task Card Component Logic
               </h1>
             </div>
+            <div id="live-announcer" class="sr-only" role="status"></div>
             <button
               class="more-less toggle-btn"
               aria-expanded="false"
@@ -491,7 +496,7 @@
               </div>
               <div>
                 <span class="label">Due Date</span>
-                <time data-testid="test-todo-due-date" datetime="2023-10-24"
+                <time data-testid="test-todo-due-date" datetime="2026-5-1"
                   >May 1, 2026</time
                 >
               </div>
@@ -555,5 +560,119 @@
         </section>
       </article>
     </section>
+    <div
+      class="modal-overlay"
+      id="modalOverlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modalTitle"
+      hidden
+    >
+      <div class="modal">
+        <header class="modal-header">
+          <h2 id="modalTitle">Edit Task</h2>
+          <button class="close-btn" id="closeModal" aria-label="Close modal">
+            &times;
+          </button>
+        </header>
+
+        <form class="modal-body">
+          <div class="input-group">
+            <label for="taskTitle">Task Title</label>
+            <input
+              type="text"
+              id="taskTitle"
+              value="Redesign landing page hero section"
+            />
+          </div>
+
+          <div class="input-group">
+            <label for="taskDesc">Description</label>
+            <textarea id="taskDesc" rows="4"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="input-group flex-1">
+              <label for="dueDate">Due Date</label>
+              <div class="icon-input">
+                <input
+                  type="datetime-local"
+                  id="dueDate"
+                  value="2023-11-24T00:00"
+                />
+              </div>
+            </div>
+            <div class="input-group no-shrink">
+              <label for="priority">Priority</label>
+              <select id="priority">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <fieldset class="input-group">
+            <legend>Status</legend>
+            <div class="status-toggle" role="radiogroup">
+              <button
+                data-modal-status="pending"
+                type="button"
+                role="radio"
+                aria-checked="false"
+              >
+                Pending
+              </button>
+              <button
+                data-modal-status="in-progress"
+                type="button"
+                role="radio"
+                aria-checked="true"
+                class="active"
+              >
+                In Progress
+              </button>
+              <button
+                data-modal-status="completed"
+                type="button"
+                role="radio"
+                aria-checked="false"
+              >
+                Completed
+              </button>
+            </div>
+          </fieldset>
+
+          <div class="input-group">
+            <label for="addTag">Tags</label>
+            <div id="tagsContainer" class="tags-container">
+              <!-- <span class="tag blue"
+                >Design
+                <button type="button" aria-label="Remove Design tag">
+                  &times;
+                </button></span
+              >
+              <span class="tag purple"
+                >Marketing
+                <button type="button" aria-label="Remove Marketing tag">
+                  &times;
+                </button></span
+              > -->
+              <input
+                type="text"
+                id="tagInput"
+                placeholder="Add tag..."
+                class="tag-input"
+              />
+            </div>
+          </div>
+        </form>
+
+        <footer class="modal-footer">
+          <button class="btn-cancel" id="cancelBtn">Cancel</button>
+          <button class="btn-save" id="saveBtn">Save Changes</button>
+        </footer>
+      </div>
+    </div>
   </body>
 </html>

@@ -1,7 +1,349 @@
 dayjs.extend(window.dayjs_plugin_relativeTime);
 
 const container = document.getElementById("task-container");
+const checkbox = document.querySelector('input[type="checkbox"]');
 const liveAnnouncer = document.getElementById("live-announcer");
+// For Modal
+const modal = document.getElementById("modalOverlay");
+const modalContent = document.querySelector(".modal");
+const openBtn = document.getElementById("open-modal");
+const closeBtn = document.getElementById("closeModal");
+const cancelBtn = document.getElementById("cancelBtn");
+const statusButtons = document.querySelectorAll(".status-toggle button");
+const tagsContainer = document.getElementById("tagsContainer");
+const tagInput = document.getElementById("tagInput");
+const saveBtn = document.getElementById("saveBtn");
+
+// openBtn.onclick = function () {
+//   modal.style.display = "flex";
+// };
+
+// Close Modal functions
+const closeModal = () => {
+  modal.style.display = "none";
+  modal.setAttribute("hidden", "");
+  openBtn.focus();
+};
+
+const openModal = () => {
+  modal.style.display = "flex";
+  modal.removeAttribute("hidden");
+  document.getElementById("taskTitle").focus();
+};
+
+closeBtn.onclick = closeModal;
+cancelBtn.onclick = closeModal;
+modal.onclick = closeModal;
+
+// Close on Escape Key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !modal.hasAttribute("hidden")) {
+    toggleModal(false);
+  }
+});
+
+// This listener stops the "click" from reaching the overlay
+// when you click inside the white modal box
+modalContent.addEventListener("click", (event) => {
+  event.stopPropagation();
+});
+
+// Handle Status Toggle UI
+statusButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    // Reset all buttons in the group
+    statusButtons.forEach((b) => {
+      b.classList.remove("active");
+      b.setAttribute("aria-checked", "false");
+    });
+    // Set clicked button to active
+    btn.classList.add("active");
+    btn.setAttribute("aria-checked", "true");
+  });
+});
+
+statusButtons.forEach((btn) => {
+  btn.addEventListener("mouseover", () => {
+    console.log(`Mouse over: ${btn.textContent.trim().toLowerCase()}`);
+    btn.classList.add(
+      `status-${btn.textContent.trim().toLowerCase().replace(/\s+/g, "-")}`,
+    );
+  });
+  btn.addEventListener("mouseout", () => {
+    console.log(`Mouse out: ${btn.textContent.trim().toLowerCase()}`);
+    btn.classList.remove(
+      `status-${btn.textContent.trim().toLowerCase().replace(/\s+/g, "-")}`,
+    );
+  });
+});
+
+// Accessibility: Focus Trap
+modal.addEventListener("keydown", function (e) {
+  if (e.key !== "Tab") return;
+
+  const focusables = modal.querySelectorAll("button, input, textarea, select");
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    last.focus();
+    e.preventDefault();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    first.focus();
+    e.preventDefault();
+  }
+});
+
+// Initial state
+let tags = [];
+const tagListed = document.querySelectorAll(".classification-tags .tag");
+tagListed.forEach((tag) => {
+  let tagContent = tag.textContent.replace("#", "");
+  tags.push(tagContent);
+});
+console.log(tags);
+
+// function getTagsState() {
+//   tags = [];
+//   const tagListed = document.querySelectorAll(".tag");
+//   tagListed.forEach((tag) => {
+//     let tagContent = tag.textContent.replace("#", "");
+//     tags.push(tagContent);
+//   });
+// }
+
+// Function to render tags to the DOM
+function renderTags() {
+  // 1. Remove all existing tags (but keep the input field)
+  // const existingTags = tagsContainer.querySelectorAll(
+  //   ".classification-tags .tag",
+  // );
+  tagsContainer.querySelectorAll(".tag").forEach((tag) => tag.remove());
+  // 2. Create and insert new tag elements
+  tags.forEach((tagText, index) => {
+    const tagElement = document.createElement("span");
+    // Apply classes based on index or text (alternating colors for demo)
+    const colorClass = index % 2 === 0 ? "blue" : "purple";
+    tagElement.classList.add("tag", colorClass);
+
+    tagElement.innerHTML = `
+            ${tagText}
+            <button type="button" aria-label="Remove ${tagText}" data-index="${index}">&times;</button>
+        `;
+
+    // Insert before the input field
+    tagsContainer.insertBefore(tagElement, tagInput);
+  });
+}
+
+// Add Tag Logic
+tagInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault(); // Prevent form submission
+    const val = tagInput.value.trim();
+
+    if (val && !tags.includes(val)) {
+      tags.push(val);
+      tagInput.value = "";
+      renderTags();
+    }
+  }
+
+  // Optional: Remove last tag on Backspace if input is empty
+  // if (e.key === "Backspace" && tagInput.value === "" && tags.length > 0) {
+  //   tags.pop();
+  //   renderTags();
+  // }
+});
+
+// Remove Tag Logic (Event Delegation)
+tagsContainer.addEventListener("click", (e) => {
+  if (e.target.tagName === "BUTTON") {
+    const indexToRemove = e.target.getAttribute("data-index");
+    tags.splice(indexToRemove, 1);
+    renderTags();
+  }
+});
+
+// Initial render
+renderTags();
+
+// Save Edit to card
+// Variable to keep track of which card is currently being edited
+let activeCard = null;
+
+// 1. SELECTING THE CARD WHEN EDIT IS CLICKED
+document.addEventListener("click", (e) => {
+  // Find the closest edit button (using delegation for multiple cards)
+  const editBtn = e.target.closest('[data-testid="test-todo-edit-button"]');
+
+  if (editBtn) {
+    // Find the specific card parent for this button
+    activeCard = editBtn.closest('[data-testid="test-todo-card"]');
+
+    // POPULATE MODAL (Optional but recommended)
+    // Extract current data from the activeCard to fill form fields
+    document.getElementById("taskTitle").value = activeCard.querySelector(
+      '[data-testid="test-todo-title"]',
+    ).innerText;
+    document.getElementById("taskDesc").value = activeCard
+      .querySelector('[data-testid="test-todo-description"]')
+      .textContent.replace(/\s+/g, " ")
+      .trim();
+    document.getElementById("dueDate").value =
+      activeCard.getAttribute("data-due");
+    document.getElementById("priority").value =
+      activeCard.getAttribute("data-priority");
+    document.querySelectorAll('button[role="radio"]').forEach((btn) => {
+      btn.classList.remove("active");
+      console.log(
+        "Status button:",
+        btn.textContent.trim().toLowerCase().replace("completed", "done"),
+      );
+      console.log(
+        "Card status:",
+        activeCard
+          .querySelector('[data-testid="test-todo-status"]')
+          .textContent.trim()
+          .toLowerCase(),
+      );
+      console.log(
+        "Compare status button:",
+        btn.textContent
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase()
+          .replace("completed", "done") ==
+          activeCard
+            .querySelector('[data-testid="test-todo-status"]')
+            .textContent.replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase(),
+      );
+      if (
+        btn.textContent
+          .replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase()
+          .replace("completed", "done") ==
+        activeCard
+          .querySelector('[data-testid="test-todo-status"]')
+          .textContent.replace(/\s+/g, " ")
+          .trim()
+          .toLowerCase()
+      ) {
+        console.log("Setting active status button:", btn.textContent);
+        btn.classList.add("active");
+      }
+    });
+
+    // ... populate priority, date, and tags similarly ...
+
+    openModal(); // Your existing function to show modal
+  }
+});
+
+// 2. UPDATING THE CARD ON SUBMIT
+// let dateTimes = ["2026-04-17T15:00:00"];
+saveBtn.addEventListener("click", (e) => {
+  e.preventDefault(); // Prevent form reload
+
+  if (!activeCard) return;
+
+  // A. Grab the new values from the Modal Form
+  const newTitle = document.getElementById("taskTitle").value;
+  const newDesc = document.getElementById("taskDesc").value;
+  const newDate = document.getElementById("dueDate").value;
+  const newPriority = document.getElementById("priority").value.toLowerCase();
+  // B. Update the specific elements WITHIN the activeCard
+  // Note: We use activeCard.querySelector() so it doesn't affect other cards
+  activeCard.querySelector('[data-testid="test-todo-title"]').innerText =
+    newTitle;
+  activeCard.querySelector('[data-testid="test-todo-description"]').innerText =
+    newDesc;
+
+  const dateEl = activeCard.querySelector('[data-testid="test-todo-due-date"]');
+  // Format date to "month day, year" format
+  const dateObj = new Date(newDate);
+  const formattedDate = dateObj.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  dateEl.innerText = formattedDate;
+  // Update datetime attribute for accessibility
+  dateEl.setAttribute("datetime", newDate);
+  // Update time remaining
+  dateTimes = [];
+  dateTimes.push(newDate);
+  activeCard.setAttribute("data-due", newDate);
+  updateAllTimestamps();
+
+  // C. Update Priority Visuals
+  // Remove old priority classes and add the new one
+  activeCard.classList.remove(
+    "priority-low",
+    "priority-medium",
+    "priority-high",
+  );
+  activeCard.classList.add(`priority-${newPriority}`);
+
+  // Update the visual indicator icon/text if necessary
+  const priorityIconGroup = activeCard.querySelector(".title-content");
+  priorityIconGroup.className = `title-content ${newPriority}-priority`;
+  setupPriorityIcons();
+
+  // Update status pill text and color based on priority (if you want to reflect priority in status)
+  const statusPill = activeCard.querySelector(
+    '[data-testid="test-todo-status"]',
+  );
+  // if (newPriority === "high") {
+  //   statusPill.textContent = "HIGH PRIORITY";
+  //   statusPill.className = "badge status-high";
+  // } else if (newPriority === "medium") {
+  //   statusPill.textContent = "MEDIUM PRIORITY";
+  //   statusPill.className = "badge status-medium";
+  // } else {
+  //   statusPill.textContent = "LOW PRIORITY";
+  //   statusPill.className = "badge status-low";
+  // }
+
+  // Update status pill text based on status button with active class
+  const activeStatusBtn = document.querySelector(
+    ".status-toggle button.active",
+  );
+  console.log(activeStatusBtn, statusPill, activeStatusBtn.textContent.trim());
+  if (activeStatusBtn.textContent.trim() !== "Completed") {
+    if (activeCard.classList.contains("is-completed")) {
+      activeCard.classList.remove("is-completed");
+      // liveAnnouncer.textContent = "Task marked as not completed";
+      checkbox.checked = false; // Uncheck the checkbox if status is not "Completed"
+    }
+    const statusText = activeStatusBtn.textContent.trim().toUpperCase();
+    statusPill.textContent = statusText;
+    statusPill.className = `badge status-${statusText.toLowerCase().replace(/\s+/g, "-")}`;
+    liveAnnouncer.textContent = `Task marked as ${statusText.toLowerCase()}`;
+  } else if (activeStatusBtn.textContent.trim() === "Completed") {
+    console.log("Toggling checkbox for Completed status");
+    checkbox.click(); // If "Completed" is selected, toggle the checkbox to mark as done
+  }
+
+  // D. Update Tags (Assuming you are using the tag system from previous step)
+  const tagListUI = activeCard.querySelector('[data-testid="test-todo-tags"]');
+  tagListUI.innerHTML = ""; // Clear old tags
+
+  // 'tags' is the array from your tag-adding logic
+  tags.forEach((tagText) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="tag">#${tagText}</span>`;
+    tagListUI.appendChild(li);
+  });
+
+  // Close modal and reset
+  closeModal();
+  activeCard = null;
+});
+
 // Wrap heavy initialization in requestIdleCallback
 // This tells the browser: "Do this only when you aren't busy with important stuff"
 window.requestIdleCallback(() => {
@@ -9,30 +351,31 @@ window.requestIdleCallback(() => {
   updateAllTimestamps();
 });
 
-const dateTimes = [
-  "2026-04-17T15:00:00",
-  "2026-04-21T09:00:00",
+let dateTimes = [
+  // "2026-04-17T15:00:00",
+  // "2026-04-21T09:00:00",
   "2026-05-01T17:00:00",
 ]; // Example due dates
 
 function setupPriorityIcons() {
-  const todoTitleWrappers = document.querySelectorAll(".title .title-content");
+  const titleIconWrappers = document.querySelectorAll(
+    ".title .title-content .icon",
+  );
   // Optimization: Use a DocumentFragment or pre-defined strings to minimize reflow
-  todoTitleWrappers.forEach((wrapper) => {
+  titleIconWrappers.forEach((wrapper) => {
     let svgPath = "";
     let color = "";
-
-    if (wrapper.classList.contains("high-priority")) {
+    if (wrapper.parentNode.classList.contains("high-priority")) {
       svgPath =
         // "m282-225-42-42 240-240 240 240-42 42-198-198-198 198Zm0-253-42-42 240-240 240 240-42 42-198-198-198 198Z";
         "M445.93-325.78h68.14v-178.89l72.56 72.56 47.98-47.74L480-634.22 325.39-479.85l47.98 47.74 72.56-72.56v178.89Zm34.1 251.76q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78ZM480-480Z";
       color = "var(--priority-high)";
-    } else if (wrapper.classList.contains("medium-priority")) {
+    } else if (wrapper.parentNode.classList.contains("medium-priority")) {
       // svgPath = "M480-554 283-357l-43-43 240-240 240 240-43 43-197-197Z";
       svgPath =
         "M612-348q54-54 54-132t-54-132q-54-54-132-54t-132 54q-54 54-54 132t54 132q54 54 132 54t132-54ZM480.03-74.02q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78Z";
       color = "var(--priority-medium)";
-    } else if (wrapper.classList.contains("low-priority")) {
+    } else if (wrapper.parentNode.classList.contains("low-priority")) {
       // svgPath = "M480-344 240-584l43-43 197 197 197-197 43 43-240 240Z";
       svgPath =
         "m480-325.78 154.61-154.37-47.98-47.74-72.56 72.56v-178.89h-68.14v178.89l-72.56-72.56-47.98 47.74L480-325.78Zm.03 251.76q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78ZM480-480Z";
@@ -40,10 +383,14 @@ function setupPriorityIcons() {
     }
 
     if (svgPath) {
-      wrapper.insertAdjacentHTML(
-        "afterbegin",
-        `<svg data-testid="test-todo-priority" height="48px" viewBox="0 -960 960 960" width="48px" fill="${color}"><path d="${svgPath}"/></svg>`,
-      );
+      wrapper.style.backgroundColor = "transparent"; // Ensure background is transparent for the icon
+      wrapper.style.animation = "none"; // Disable animation for priority icons
+      // wrapper.insertAdjacentHTML(
+      //   "afterbegin",
+      //   `<svg data-testid="test-todo-priority" height="48px" viewBox="0 -960 960 960" width="48px" fill="${color}"><path d="${svgPath}"/></svg>`,
+      // );
+
+      wrapper.innerHTML = `<svg data-testid="test-todo-priority" height="48px" viewBox="0 -960 960 960" width="48px" fill="${color}"><path d="${svgPath}"/></svg>`;
     }
   });
 }
@@ -51,6 +398,7 @@ function setupPriorityIcons() {
 function updateAllTimestamps() {
   dateTimes.forEach((dueDate) => {
     const timeData = getTimeRemaining(dueDate);
+    console.log(timeData);
     // Optimization: Target specific cards using ID or data-attribute directly
     const card = document.querySelector(`.card[data-due="${dueDate}"]`);
     if (card) {
@@ -89,7 +437,7 @@ container.addEventListener("change", (event) => {
 
       // Revert to the status we saved earlier, or default to 'OPEN'
       statusPill.textContent = card.dataset.oldStatus || "OPEN";
-      liveAnnouncer.textContent = "Task marked as not completed";
+      liveAnnouncer.textContent = `Task marked as ${statusPill.textContent.toLowerCase()}`;
     }
   }
 });
@@ -106,29 +454,28 @@ container.addEventListener("keydown", (event) => {
 container.addEventListener("click", (event) => {
   if (event.target.classList.contains("toggle-btn")) {
     const card = event.target.closest(".card");
+    const title = card.querySelector(".card-content .title");
     const content = card.querySelector(".card-content p");
     const button = event.target;
 
     if (window.getComputedStyle(content).display === "none") {
       content.style.display = "block";
+      title.style.marginBlockEnd = "0";
       button.textContent = "See Less";
       button.setAttribute("aria-expanded", "true");
       content.hidden = false;
     } else {
       content.style.display = "none";
+      title.style.marginBlockEnd = "1em";
       button.textContent = "See More";
       button.setAttribute("aria-expanded", "false");
       content.hidden = true;
     }
-  } else if (
-    event.target.classList.contains("edit") ||
-    event.target.classList.contains("delete")
-  ) {
-    // Handle edit and delete button clicks here
-    alert(
-      `${event.target.classList.contains("edit") ? "Edit" : "Delete"} button clicked.`,
-    );
   }
+  // else if (event.target.classList.contains("edit")) {
+
+  //   openModal();
+  // }
 });
 
 // Time Remaining Countdown Logic
@@ -152,7 +499,7 @@ function getTimeRemaining(dueDate) {
 
   // 3. Return the "Human" string (e.g., "in 2 hours", "3 days ago")
   return {
-    text: target.from(now),
+    text: `Due ${target.from(now)}`,
     color: colorVar,
   };
 }
