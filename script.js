@@ -19,11 +19,6 @@ let itemToDelete = null;
 
 const toast = document.getElementById("undo-toast");
 const undoBtn = document.getElementById("undo-btn");
-// const progressBar = document.querySelector(".progress-bar");
-
-// openBtn.onclick = function () {
-//   modal.style.display = "flex";
-// };
 
 // Close Modal functions
 const closeModal = () => {
@@ -110,21 +105,9 @@ tagListed.forEach((tag) => {
 });
 console.log(tags);
 
-// function getTagsState() {
-//   tags = [];
-//   const tagListed = document.querySelectorAll(".tag");
-//   tagListed.forEach((tag) => {
-//     let tagContent = tag.textContent.replace("#", "");
-//     tags.push(tagContent);
-//   });
-// }
-
 // Function to render tags to the DOM
 function renderTags() {
   // 1. Remove all existing tags (but keep the input field)
-  // const existingTags = tagsContainer.querySelectorAll(
-  //   ".classification-tags .tag",
-  // );
   tagsContainer.querySelectorAll(".tag").forEach((tag) => tag.remove());
   // 2. Create and insert new tag elements
   tags.forEach((tagText, index) => {
@@ -155,12 +138,6 @@ tagInput.addEventListener("keydown", (e) => {
       renderTags();
     }
   }
-
-  // Optional: Remove last tag on Backspace if input is empty
-  // if (e.key === "Backspace" && tagInput.value === "" && tags.length > 0) {
-  //   tags.pop();
-  //   renderTags();
-  // }
 });
 
 // Remove Tag Logic (Event Delegation)
@@ -245,43 +222,8 @@ document.addEventListener("click", (e) => {
       }
     });
 
-    // ... populate priority, date, and tags similarly ...
-
     openModal(); // Your existing function to show modal
   }
-
-  // if (deleteBtn) {
-  //   const card = deleteBtn.closest('[data-testid="test-todo-card"]');
-  //   itemToDelete = card;
-
-  //   // // 1. Reset & Restart Animation
-  //   // // By removing and re-adding the progress bar, the browser restarts the CSS 'shrink'
-  //   // const newBar = progressBar.cloneNode(true);
-  //   // progressBar.parentNode.replaceChild(newBar, progressBar);
-
-  //   // FIX: Query the bar inside the function so it's always the current one
-  //   const currentBar = toast.querySelector(".progress-bar");
-
-  //   const newBar = currentBar.cloneNode(true);
-  //   currentBar.parentNode.replaceChild(newBar, currentBar);
-
-  //   // 1. Optimistic UI: Hide immediately
-  //   card.style.display = "none";
-
-  //   // 2. Show Toast through animation & Manage Focus
-  //   toast.classList.remove("toast-hidden");
-  //   toast.style.animation = "show 0.3s ease";
-  //   setTimeout(() => {
-  //     undoBtn.focus();
-  //     // Log to console to verify it actually grabbed focus
-  //     console.log("Focused element:", document.activeElement);
-  //   }, 10);
-
-  //   // 3. Set the "Permanent" deletion timer
-  //   deleteTimer = setTimeout(() => {
-  //     confirmDeletion();
-  //   }, 5000);
-  // }
 });
 
 const deleteBtns = document.querySelectorAll(
@@ -374,16 +316,6 @@ saveBtn.addEventListener("click", (e) => {
   const statusPill = activeCard.querySelector(
     '[data-testid="test-todo-status"]',
   );
-  // if (newPriority === "high") {
-  //   statusPill.textContent = "HIGH PRIORITY";
-  //   statusPill.className = "badge status-high";
-  // } else if (newPriority === "medium") {
-  //   statusPill.textContent = "MEDIUM PRIORITY";
-  //   statusPill.className = "badge status-medium";
-  // } else {
-  //   statusPill.textContent = "LOW PRIORITY";
-  //   statusPill.className = "badge status-low";
-  // }
 
   // Update status pill text based on status button with active class
   const activeStatusBtn = document.querySelector(
@@ -393,7 +325,6 @@ saveBtn.addEventListener("click", (e) => {
   if (activeStatusBtn.textContent.trim() !== "Completed") {
     if (activeCard.classList.contains("is-completed")) {
       activeCard.classList.remove("is-completed");
-      // liveAnnouncer.textContent = "Task marked as not completed";
       checkbox.checked = false; // Uncheck the checkbox if status is not "Completed"
     }
     const statusText = activeStatusBtn.textContent.trim().toUpperCase();
@@ -428,11 +359,7 @@ window.requestIdleCallback(() => {
   updateAllTimestamps();
 });
 
-let dateTimes = [
-  // "2026-04-17T15:00:00",
-  // "2026-04-21T09:00:00",
-  "2026-05-01T17:00:00",
-]; // Example due dates
+let dateTimes = ["2026-05-01T17:00:00"]; // Example due dates
 
 function setupPriorityIcons() {
   const titleIconWrappers = document.querySelectorAll(
@@ -444,16 +371,13 @@ function setupPriorityIcons() {
     let color = "";
     if (wrapper.parentNode.classList.contains("high-priority")) {
       svgPath =
-        // "m282-225-42-42 240-240 240 240-42 42-198-198-198 198Zm0-253-42-42 240-240 240 240-42 42-198-198-198 198Z";
         "M445.93-325.78h68.14v-178.89l72.56 72.56 47.98-47.74L480-634.22 325.39-479.85l47.98 47.74 72.56-72.56v178.89Zm34.1 251.76q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78ZM480-480Z";
       color = "var(--priority-high)";
     } else if (wrapper.parentNode.classList.contains("medium-priority")) {
-      // svgPath = "M480-554 283-357l-43-43 240-240 240 240-43 43-197-197Z";
       svgPath =
         "M612-348q54-54 54-132t-54-132q-54-54-132-54t-132 54q-54 54-54 132t54 132q54 54 132 54t132-54ZM480.03-74.02q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78Z";
       color = "var(--priority-medium)";
     } else if (wrapper.parentNode.classList.contains("low-priority")) {
-      // svgPath = "M480-344 240-584l43-43 197 197 197-197 43 43-240 240Z";
       svgPath =
         "m480-325.78 154.61-154.37-47.98-47.74-72.56 72.56v-178.89h-68.14v178.89l-72.56-72.56-47.98 47.74L480-325.78Zm.03 251.76q-83.46 0-157.54-31.88-74.07-31.88-129.39-87.2-55.32-55.32-87.2-129.36-31.88-74.04-31.88-157.51 0-84.46 31.88-158.54 31.88-74.07 87.16-128.9 55.28-54.84 129.34-86.82 74.06-31.99 157.55-31.99 84.48 0 158.59 31.97 74.1 31.97 128.91 86.77 54.82 54.8 86.79 128.88 31.98 74.08 31.98 158.6 0 83.5-31.99 157.57-31.98 74.07-86.82 129.36-54.83 55.29-128.87 87.17-74.04 31.88-158.51 31.88Zm-.03-68.13q141.04 0 239.45-98.75 98.4-98.76 98.4-239.1 0-141.04-98.4-239.45-98.41-98.4-239.57-98.4-140.16 0-238.95 98.4-98.78 98.41-98.78 239.57 0 140.16 98.75 238.95 98.76 98.78 239.1 98.78ZM480-480Z";
       color = "var(--priority-low)";
@@ -462,11 +386,6 @@ function setupPriorityIcons() {
     if (svgPath) {
       wrapper.style.backgroundColor = "transparent"; // Ensure background is transparent for the icon
       wrapper.style.animation = "none"; // Disable animation for priority icons
-      // wrapper.insertAdjacentHTML(
-      //   "afterbegin",
-      //   `<svg data-testid="test-todo-priority" height="48px" viewBox="0 -960 960 960" width="48px" fill="${color}"><path d="${svgPath}"/></svg>`,
-      // );
-
       wrapper.innerHTML = `<svg data-testid="test-todo-priority" height="48px" viewBox="0 -960 960 960" width="48px" fill="${color}"><path d="${svgPath}"/></svg>`;
     }
   });
@@ -549,10 +468,6 @@ container.addEventListener("click", (event) => {
       content.hidden = true;
     }
   }
-  // else if (event.target.classList.contains("edit")) {
-
-  //   openModal();
-  // }
 });
 
 // Time Remaining Countdown Logic
@@ -582,28 +497,6 @@ function getTimeRemaining(dueDate) {
 }
 
 // script for the toast notification
-// let deleteTimer = null;
-// let itemToDelete = null;
-
-// const toast = document.getElementById("undo-toast");
-// const undoBtn = document.getElementById("undo-btn");
-
-// document.querySelector(".delete-btn").addEventListener("click", (e) => {
-//   const card = e.target.closest(".task-card");
-//   itemToDelete = card;
-
-//   // // 1. Optimistic UI: Hide immediately
-//   // card.style.display = "none";
-
-//   // // 2. Show Toast & Manage Focus
-//   // toast.classList.remove("toast-hidden");
-//   // undoBtn.focus();
-
-//   // // 3. Set the "Permanent" deletion timer
-//   // deleteTimer = setTimeout(() => {
-//   //   confirmDeletion();
-//   // }, 5000);
-// });
 
 function triggerUndo() {
   if (deleteTimer) {
@@ -615,13 +508,8 @@ function triggerUndo() {
       itemToDelete.querySelector('[data-testid="test-todo-delete-button"]')
         .focus,
     );
-    // itemToDelete
-    //   .querySelector('[data-testid="test-todo-delete-button"]')
-    //   .focus();
+
     console.log("Time up");
-    // itemToDelete
-    //   .querySelector('[data-testid="test-todo-delete-button"]')
-    //   .focus();
 
     // Restore UI
     itemToDelete.style.display = "block";
