@@ -735,3 +735,110 @@ select:focus {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Style for toast */
+
+#undo-toast {
+  font-family: "Inter", sans-serif;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 300px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  /* animation: show 0.3s ease; */
+  transition: opacity 0.3s ease;
+}
+
+.toast-hidden {
+  opacity: 0;
+  visibility: hidden;
+  /* display: none; */
+  /* opacity: 1; */
+  pointer-events: none;
+  /* animation: hide 0.3s ease; */
+}
+
+.toast-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#undo-btn {
+  /* background: #ffcc00; */
+  background: transparent;
+  border: 1px solid #ffcc00;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  /* color: #222; */
+  color: #ffcc00;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+#undo-btn:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+  color: #222;
+  background: #ffcc00;
+}
+
+.progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::after {
+  content: "";
+  display: block;
+  height: 100%;
+  background: #ffcc00;
+  width: 100%;
+  /* This matches the 5s JS timer */
+  animation: shrink 5s linear forwards;
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+@keyframes show {
+  from {
+    opacity: 0;
+    visibility: hidden;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+@keyframes hide {
+  from {
+    opacity: 1;
+    visibility: visible;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}

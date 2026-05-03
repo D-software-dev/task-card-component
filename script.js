@@ -13,6 +13,13 @@ const statusButtons = document.querySelectorAll(".status-toggle button");
 const tagsContainer = document.getElementById("tagsContainer");
 const tagInput = document.getElementById("tagInput");
 const saveBtn = document.getElementById("saveBtn");
+// For Delete Toast
+let deleteTimer = null;
+let itemToDelete = null;
+
+const toast = document.getElementById("undo-toast");
+const undoBtn = document.getElementById("undo-btn");
+// const progressBar = document.querySelector(".progress-bar");
 
 // openBtn.onclick = function () {
 //   modal.style.display = "flex";
@@ -176,6 +183,7 @@ let activeCard = null;
 document.addEventListener("click", (e) => {
   // Find the closest edit button (using delegation for multiple cards)
   const editBtn = e.target.closest('[data-testid="test-todo-edit-button"]');
+  const deleteBtn = e.target.closest('[data-testid="test-todo-delete-button"]');
 
   if (editBtn) {
     // Find the specific card parent for this button
@@ -241,6 +249,75 @@ document.addEventListener("click", (e) => {
 
     openModal(); // Your existing function to show modal
   }
+
+  // if (deleteBtn) {
+  //   const card = deleteBtn.closest('[data-testid="test-todo-card"]');
+  //   itemToDelete = card;
+
+  //   // // 1. Reset & Restart Animation
+  //   // // By removing and re-adding the progress bar, the browser restarts the CSS 'shrink'
+  //   // const newBar = progressBar.cloneNode(true);
+  //   // progressBar.parentNode.replaceChild(newBar, progressBar);
+
+  //   // FIX: Query the bar inside the function so it's always the current one
+  //   const currentBar = toast.querySelector(".progress-bar");
+
+  //   const newBar = currentBar.cloneNode(true);
+  //   currentBar.parentNode.replaceChild(newBar, currentBar);
+
+  //   // 1. Optimistic UI: Hide immediately
+  //   card.style.display = "none";
+
+  //   // 2. Show Toast through animation & Manage Focus
+  //   toast.classList.remove("toast-hidden");
+  //   toast.style.animation = "show 0.3s ease";
+  //   setTimeout(() => {
+  //     undoBtn.focus();
+  //     // Log to console to verify it actually grabbed focus
+  //     console.log("Focused element:", document.activeElement);
+  //   }, 10);
+
+  //   // 3. Set the "Permanent" deletion timer
+  //   deleteTimer = setTimeout(() => {
+  //     confirmDeletion();
+  //   }, 5000);
+  // }
+});
+
+const deleteBtns = document.querySelectorAll(
+  '[data-testid="test-todo-delete-button"]',
+);
+
+// Change 'click' to 'mousedown'
+deleteBtns.forEach((deleteBtn) => {
+  deleteBtn.addEventListener("click", (e) => {
+    // 1. Prevent the browser from committing focus to the clicked button
+    // e.preventDefault();
+
+    const card = deleteBtn.closest('[data-testid="test-todo-card"]');
+    itemToDelete = card;
+
+    // 2. Restart your animation logic
+    const currentBar = toast.querySelector(".progress-bar");
+    const newBar = currentBar.cloneNode(true);
+    currentBar.parentNode.replaceChild(newBar, currentBar);
+
+    // 3. UI Updates
+    card.style.display = "none";
+    toast.classList.remove("toast-hidden");
+    toast.style.animation = "show 0.3s ease";
+
+    // 4. Focus is now safe to move
+    setTimeout(() => {
+      undoBtn.focus();
+      console.log("Focused element:", document.activeElement);
+    }, 30);
+
+    // 5. Start timer
+    deleteTimer = setTimeout(() => {
+      confirmDeletion();
+    }, 5000);
+  });
 });
 
 // 2. UPDATING THE CARD ON SUBMIT
@@ -502,4 +579,87 @@ function getTimeRemaining(dueDate) {
     text: `Due ${target.from(now)}`,
     color: colorVar,
   };
+}
+
+// script for the toast notification
+// let deleteTimer = null;
+// let itemToDelete = null;
+
+// const toast = document.getElementById("undo-toast");
+// const undoBtn = document.getElementById("undo-btn");
+
+// document.querySelector(".delete-btn").addEventListener("click", (e) => {
+//   const card = e.target.closest(".task-card");
+//   itemToDelete = card;
+
+//   // // 1. Optimistic UI: Hide immediately
+//   // card.style.display = "none";
+
+//   // // 2. Show Toast & Manage Focus
+//   // toast.classList.remove("toast-hidden");
+//   // undoBtn.focus();
+
+//   // // 3. Set the "Permanent" deletion timer
+//   // deleteTimer = setTimeout(() => {
+//   //   confirmDeletion();
+//   // }, 5000);
+// });
+
+function triggerUndo() {
+  if (deleteTimer) {
+    clearTimeout(deleteTimer);
+
+    // Return focus to the delete button of the restored item
+    console.log(
+      itemToDelete.querySelector('[data-testid="test-todo-delete-button"]'),
+      itemToDelete.querySelector('[data-testid="test-todo-delete-button"]')
+        .focus,
+    );
+    // itemToDelete
+    //   .querySelector('[data-testid="test-todo-delete-button"]')
+    //   .focus();
+    console.log("Time up");
+    // itemToDelete
+    //   .querySelector('[data-testid="test-todo-delete-button"]')
+    //   .focus();
+
+    // Restore UI
+    itemToDelete.style.display = "block";
+    toast.classList.add("toast-hidden");
+    toast.style.animation = "hide 0.3s ease"; // Play hide animation immediately
+    itemToDelete
+      .querySelector('[data-testid="test-todo-delete-button"]')
+      .focus();
+    console.log("Focused element:", document.activeElement);
+    itemToDelete = null;
+  }
+}
+
+// Global Keyboard Shortcut: Ctrl + Z
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+    e.preventDefault(); // Prevent browser undo logic
+    triggerUndo();
+  }
+  if (e.key === "Enter") {
+    const deleteBtn = e.target.closest(
+      '[data-testid="test-todo-delete-button"]',
+    );
+    if (deleteBtn) {
+      console.log("Enter key detected on delete button!");
+      // Manually trigger the logic if needed
+      deleteBtn.click();
+    }
+  }
+});
+
+undoBtn.addEventListener("click", triggerUndo);
+
+function confirmDeletion() {
+  if (itemToDelete) {
+    console.log("Deleted from DB:", itemToDelete.dataset.id);
+    itemToDelete.remove();
+    toast.classList.add("toast-hidden");
+    itemToDelete = null;
+  }
 }
